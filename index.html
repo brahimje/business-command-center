@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brahim Jellite — Business Command Center</title>
+<style>
+  :root{
+    --bg:#050b08;
+    --bg2:#08120d;
+    --panel:rgba(14,26,20,.80);
+    --panel-solid:#0e1a14;
+    --border:#1d3328;
+    --border2:#2e4d3c;
+    --text:#eaf5ee;
+    --muted:#94b3a2;
+    --faint:#5d7a6b;
+    --gold:#d4af37;
+    --gold-light:#f6e27a;
+    --gold-soft:rgba(212,175,55,.5);
+    --emerald:#34d399;
+    --emerald-deep:#059669;
+    --amber:#fbbf24;
+    --blue:#60a5fa;
+    --orange:#fb923c;
+    --red:#f87171;
+    --mono:'JetBrains Mono','Cascadia Code','Consolas',ui-monospace,monospace;
+    --serif:'Playfair Display',Georgia,'Times New Roman',serif;
+    --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+  body::before{
+    content:"";
+    position:fixed;inset:0;
+    background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cg fill='none' stroke='%23d4af37' stroke-opacity='0.055' stroke-width='1'%3E%3Crect x='15' y='15' width='60' height='60' transform='rotate(45 45 45)'/%3E%3Crect x='28' y='28' width='34' height='34'/%3E%3Crect x='28' y='28' width='34' height='34' transform='rotate(45 45 45)'/%3E%3Ccircle cx='45' cy='45' r='6'/%3E%3C/g%3E%3C/svg%3E"),
+      radial-gradient(1200px 550px at 85% -10%, rgba(52,211,153,.16), transparent 55%),
+      radial-gradient(900px 600px at -5% 5%, rgba(212,175,55,.10), transparent 50%),
+      radial-gradient(1100px 700px at 50% 115%, rgba(5,150,105,.12), transparent 60%);
+    pointer-events:none;z-index:0;
+  }
+
+  .notes{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+  .note{position:absolute;top:-180px;will-change:transform,opacity;animation:fall linear infinite;filter:drop-shadow(0 10px 22px rgba(0,0,0,.5))}
+  @keyframes fall{
+    0%{transform:translateY(-8vh) translateX(0) rotate(var(--rot));opacity:0}
+    8%{opacity:var(--op)}
+    50%{transform:translateY(52vh) translateX(var(--sway)) rotate(calc(var(--rot) + var(--tilt)))}
+    92%{opacity:var(--op)}
+    100%{transform:translateY(112vh) translateX(0) rotate(var(--rot));opacity:0}
+  }
+
+  .wrap{max-width:1180px;margin:0 auto;padding:0 28px;position:relative;z-index:1}
+
+  header{padding:48px 0 34px;border-bottom:1px solid var(--border)}
+  .kicker{
+    font-family:var(--mono);font-size:12px;letter-spacing:3px;
+    color:var(--emerald);text-transform:uppercase;margin-bottom:14px;
+    display:flex;align-items:center;gap:12px;
+  }
+  .kicker::before{content:"";width:34px;height:1px;background:linear-gradient(90deg,transparent,var(--emerald))}
+  h1{font-size:44px;font-weight:800;letter-spacing:-1px;line-height:1.05;font-family:var(--serif)}
+  .lux-title{
+    background:linear-gradient(120deg,#f6e27a 0%,#d4af37 25%,#fff6cf 50%,#34d399 75%,#d4af37 100%);
+    background-size:200% auto;
+    -webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent;
+    animation:shine 8s linear infinite;
+  }
+  @keyframes shine{to{background-position:200% center}}
+  h1 .dim{color:var(--muted);-webkit-text-fill-color:var(--muted)}
+  .sub{margin-top:12px;color:var(--muted);font-size:16px;max-width:700px}
+  .sub b{color:var(--emerald)}
+
+  .wealth{
+    margin:30px 0 6px;padding:28px 30px;border-radius:18px;position:relative;overflow:hidden;
+    background:linear-gradient(135deg,rgba(5,150,105,.22),rgba(5,150,105,.03) 55%,rgba(212,175,55,.10));
+    border:1px solid rgba(52,211,153,.35);
+  }
+  .wealth::before{content:"";position:absolute;inset:0;background:linear-gradient(120deg,transparent 25%,rgba(255,255,255,.05) 50%,transparent 75%);transform:translateX(-100%);animation:sheen 7s ease-in-out infinite}
+  @keyframes sheen{0%,55%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+  .wealth-label{font-family:var(--mono);font-size:11px;letter-spacing:2.5px;color:var(--emerald);text-transform:uppercase;display:flex;align-items:center;gap:10px}
+  .wealth-label .ar{color:var(--gold);letter-spacing:1px;font-size:13px}
+  .wealth-num{font-family:var(--mono);font-size:clamp(44px,9vw,86px);font-weight:800;line-height:1;margin:10px 0 4px;letter-spacing:-1px;
+    background:linear-gradient(180deg,#fff8dc,#f6e27a 45%,#d4af37);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+    filter:drop-shadow(0 0 24px rgba(246,226,122,.35));
+  }
+  .wealth-num .cur{font-size:.45em;-webkit-text-fill-color:var(--gold-light);margin-left:8px}
+  .wealth-sub{color:var(--muted);font-size:13px;font-family:var(--mono);letter-spacing:.5px}
+  .wealth-sub .live{color:var(--emerald);font-weight:700}
+
+  .stats{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin:24px 0 8px}
+  .stat{
+    background:var(--panel);border:1px solid var(--border);border-radius:12px;
+    padding:16px 14px;display:flex;flex-direction:column;gap:2px;backdrop-filter:blur(8px);
+    position:relative;overflow:hidden;
+  }
+  .stat::after{content:"";position:absolute;inset:0;background:linear-gradient(120deg,transparent 30%,rgba(52,211,153,.12) 50%,transparent 70%);transform:translateX(-100%);transition:.8s}
+  .stat:hover::after{transform:translateX(100%)}
+  .stat .n{font-size:30px;font-weight:800;font-family:var(--serif)}
+  .stat .l{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted)}
+  .stat.live .n{color:var(--emerald)}
+  .stat.build .n{color:var(--amber)}
+  .stat.active .n{color:var(--gold-light)}
+  .stat.side .n{color:var(--blue)}
+  .stat.paused .n{color:var(--orange)}
+  .stat.archive .n{color:var(--faint)}
+
+  .filters{display:flex;gap:8px;flex-wrap:wrap;margin:34px 0 18px}
+  .chip{
+    font-family:var(--mono);font-size:12px;letter-spacing:1px;text-transform:uppercase;
+    padding:8px 14px;border-radius:999px;cursor:pointer;user-select:none;
+    background:var(--panel);border:1px solid var(--border);color:var(--muted);
+    transition:.15s;backdrop-filter:blur(8px);
+  }
+  .chip:hover{border-color:var(--emerald);color:var(--text)}
+  .chip.on{background:linear-gradient(120deg,#059669,#34d399);color:#03140d;border-color:var(--emerald);font-weight:700}
+
+  section{margin:40px 0 10px}
+  .sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:16px}
+  .sec-title{font-size:19px;font-weight:800;letter-spacing:-.3px;font-family:var(--serif);color:var(--gold-light)}
+  .sec-count{font-family:var(--mono);font-size:11px;color:var(--faint)}
+  .sec-rule{flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent)}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+  .card{
+    background:var(--panel);border:1px solid var(--border);border-radius:14px;
+    padding:22px;display:flex;flex-direction:column;gap:12px;position:relative;
+    transition:transform .18s,border-color .18s,box-shadow .18s;backdrop-filter:blur(8px);
+  }
+  .card:hover{transform:translateY(-3px);border-color:rgba(52,211,153,.5);box-shadow:0 16px 48px -20px rgba(5,150,105,.45)}
+  .card[hidden]{display:none}
+  .card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+  .card-name{font-size:18px;font-weight:800;letter-spacing:-.3px;font-family:var(--serif)}
+  .card-tag{font-family:var(--mono);font-size:11px;color:var(--faint);margin-top:3px;text-transform:uppercase;letter-spacing:1px}
+  .badge{
+    font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;
+    padding:4px 10px;border-radius:999px;white-space:nowrap;border:1px solid;
+  }
+  .b-active{color:var(--gold-light);border-color:var(--gold-soft);background:rgba(212,175,55,.10)}
+  .b-active::before{content:"●";margin-right:5px;animation:pulse 1.6s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .b-live{color:var(--emerald);border-color:rgba(52,211,153,.4);background:rgba(52,211,153,.09)}
+  .b-build{color:var(--amber);border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.08)}
+  .b-side{color:var(--blue);border-color:rgba(96,165,250,.35);background:rgba(96,165,250,.08)}
+  .b-paused{color:var(--orange);border-color:rgba(251,146,60,.35);background:rgba(251,146,60,.08)}
+  .b-archive{color:var(--faint);border-color:rgba(93,122,107,.5);background:rgba(93,122,107,.07)}
+  .card-desc{color:var(--muted);font-size:14px}
+  .card-meta{display:flex;flex-direction:column;gap:6px;margin-top:auto}
+  .row{display:flex;gap:8px;align-items:baseline;font-size:13px}
+  .row .k{font-family:var(--mono);font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:1px;width:84px;flex:none}
+  .row .v{color:var(--text)}
+  .row .v.mono{font-family:var(--mono);font-size:12px;color:var(--emerald)}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+  .tchip{
+    font-family:var(--mono);font-size:10.5px;color:var(--muted);
+    background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:3px 8px;
+  }
+  .tchip.hl{color:var(--gold-light);border-color:var(--gold-soft)}
+  a.link{color:var(--emerald);text-decoration:none;font-family:var(--mono);font-size:12px;border-bottom:1px dotted rgba(52,211,153,.4)}
+  a.link:hover{border-bottom-color:var(--emerald)}
+
+  /* active ventures (the two money engines) */
+  .focus{
+    background:linear-gradient(135deg,rgba(52,211,153,.14),rgba(52,211,153,.02) 55%,rgba(212,175,55,.08));
+    border:1px solid rgba(52,211,153,.35);border-radius:16px;padding:24px;
+    display:flex;flex-direction:column;gap:14px;position:relative;overflow:hidden;backdrop-filter:blur(8px);
+  }
+  .focus .focus-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+  .focus h2{font-size:22px;font-weight:800;letter-spacing:-.5px;font-family:var(--serif)}
+  .focus .tag{font-family:var(--mono);font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:1px;margin-top:3px}
+  .focus p{color:var(--muted);font-size:14.5px}
+  .focus .pill{display:inline-block;font-family:var(--mono);font-size:11px;color:var(--emerald);border:1px solid rgba(52,211,153,.4);padding:4px 10px;border-radius:999px;margin:0 6px 6px 0}
+  .focus .pill.warn{color:var(--orange);border-color:rgba(251,146,60,.45);background:rgba(251,146,60,.08)}
+  .focus .pill.gold{color:var(--gold-light);border-color:var(--gold-soft)}
+  .focus .metrics{display:flex;flex-wrap:wrap;gap:8px}
+  .focus .m{background:rgba(5,11,8,.5);border:1px solid var(--border);border-radius:10px;padding:10px 14px;min-width:90px}
+  .focus .m .v{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--gold-light)}
+  .focus .m .l{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-top:2px}
+  .focus .m.zero .v{color:var(--orange)}
+  .focus .list{background:rgba(5,11,8,.5);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+  .focus .list h4{font-family:var(--mono);font-size:10.5px;color:var(--emerald);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px}
+  .focus .list ul{list-style:none;display:flex;flex-direction:column;gap:5px;font-size:12.5px;color:var(--text)}
+  .focus .list li::before{content:"◆";color:var(--emerald);font-size:7px;margin-right:8px;vertical-align:1px}
+
+  footer{border-top:1px solid var(--border);margin-top:56px;padding:34px 0 60px;color:var(--faint);font-size:13px}
+  footer .cols{display:flex;flex-wrap:wrap;gap:40px;margin-bottom:20px}
+  footer h4{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--emerald);margin-bottom:10px}
+  footer .k{color:var(--faint)} footer .v{color:var(--muted)}
+  .sig{font-family:var(--mono);font-size:12px;color:var(--faint)}
+
+  @media(max-width:720px){
+    .stats{grid-template-columns:repeat(3,1fr)}
+    .grid{grid-template-columns:1fr}
+    h1{font-size:30px}
+    .wealth-num{font-size:44px}
+  }
+</style>
+</head>
+<body>
+<div class="notes" id="notes"></div>
+<div class="wrap">
+
+  <header>
+    <div class="kicker">Tchach · Ain Cheggag · Morocco</div>
+    <h1><span class="lux-title">Business Command Center</span> <span class="dim">/ Brahim Jellite</span></h1>
+    <p class="sub">كل مشروع تحت السقف — <b>what's live, what's building, what's parked.</b> Managed from the live <a class="link" href="https://conventional-street-lenders-patio.trycloudflare.com" target="_blank">Content Operations Center ↗</a>.</p>
+
+    <div class="wealth">
+      <div class="wealth-label">Dirham Flow <span class="ar">· تدفق الدرهم</span></div>
+      <div class="wealth-num"><span id="counter">0</span><span class="cur">د.م</span></div>
+      <div class="wealth-sub"><span class="live">● LIVE</span> · total value in motion — target configurable in script</div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="n" data-count="14">0</div><div class="l">Ventures</div></div>
+      <div class="stat active"><div class="n" data-count="2">0</div><div class="l">Active Focus</div></div>
+      <div class="stat live"><div class="n" data-count="5">0</div><div class="l">Live</div></div>
+      <div class="stat build"><div class="n" data-count="3">0</div><div class="l">Building</div></div>
+      <div class="stat paused"><div class="n" data-count="2">0</div><div class="l">Side / Paused</div></div>
+      <div class="stat archive"><div class="n" data-count="2">0</div><div class="l">Archived</div></div>
+    </div>
+  </header>
+
+  <!-- ============ ACTIVE — THE MONEY ENGINES ============ -->
+  <section data-sec="active" style="margin-top:30px">
+    <div class="sec-head"><span class="sec-title">Active — The Money Engines</span><span class="sec-count">2</span><span class="sec-rule"></span></div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(430px,1fr))">
+
+      <!-- YouTube Content Operations -->
+      <div class="focus" data-f="active">
+        <div class="focus-top">
+          <div>
+            <h2>YouTube Content Operations</h2>
+            <div class="tag">10 faceless channels · automated pipeline</div>
+          </div>
+          <span class="badge b-active">Active</span>
+        </div>
+        <p>Audio-first black-screen content in the <b>history / wisdom / lessons</b> niche. One channel per Google account, run by cloud Hermes (VPS) + local Windows Hermes — topic discovery → script → voice (edge-tts) → render → upload, fully automated.</p>
+        <div class="metrics">
+          <div class="m"><div class="v">10</div><div class="l">channels</div></div>
+          <div class="m"><div class="v">271</div><div class="l">topics</div></div>
+          <div class="m"><div class="v">44</div><div class="l">episodes</div></div>
+          <div class="m"><div class="v">42</div><div class="l">produced</div></div>
+          <div class="m"><div class="v">$4.89</div><div class="l">cost</div></div>
+        </div>
+        <span class="pill">42 videos produced · live on 10 channels</span>
+        <div class="list">
+          <h4>Channel Roster</h4>
+          <ul>
+            <li>Lessons from History · Forgotten Wisdom · Old Books → Modern Lessons</li>
+            <li>Forgotten Human Skills · History &amp; Money · Forgotten Scientists</li>
+            <li>Life Before Modern Technology · Lessons From Failure</li>
+            <li>Letters &amp; Diaries From the Past · Ancient Problems → Modern Solutions</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Extensions Studio -->
+      <div class="focus" data-f="active">
+        <div class="focus-top">
+          <div>
+            <h2>Extensions Studio</h2>
+            <div class="tag">Chrome / Firefox extension pipeline</div>
+          </div>
+          <span class="badge b-active">Active</span>
+        </div>
+        <p>Data-driven extension factory — scores niches, then builds. Scoring: <b>demand 30% · competition 30% · monetization 25% · simplicity 15%</b> (APPROVED ≥ 80). Chrome Store intel from 263,990 live extensions.</p>
+        <div class="metrics">
+          <div class="m"><div class="v">60</div><div class="l">niches scored</div></div>
+          <div class="m"><div class="v">11</div><div class="l">built</div></div>
+          <div class="m"><div class="v">9</div><div class="l">queued</div></div>
+        </div>
+        <span class="pill">11 extensions built · 9 more queued · ready to publish (Chrome $5 fee)</span>
+        <div class="list">
+          <h4>Built &amp; Ready</h4>
+          <ul>
+            <li>Comp Scout — eBay comps (86) · LoadMath — freight ROI (81)</li>
+            <li>Pallet ROI — liquidation (80) · NetProfit (80) · TicketNet (80)</li>
+            <li>Critter (76) · OceanKeeper (76) · MoodSky (74) · One Pixel (74)</li>
+            <li>Focus Tomato — Pomodoro · + Back-in-Stock ping · 9 more queued</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ FILTERS ============ -->
+  <div class="filters">
+    <div class="chip on" data-f="all">All</div>
+    <div class="chip" data-f="active">Active</div>
+    <div class="chip" data-f="live">Live</div>
+    <div class="chip" data-f="build">Building</div>
+    <div class="chip" data-f="side">Side / Paused</div>
+    <div class="chip" data-f="archive">Archived</div>
+  </div>
+
+  <!-- ============ LIVE ============ -->
+  <section data-sec="live">
+    <div class="sec-head"><span class="sec-title">Live &amp; Shipped</span><span class="sec-count">5</span><span class="sec-rule"></span></div>
+    <div class="grid">
+
+      <div class="card" data-f="live">
+        <div class="card-top">
+          <div><div class="card-name">AutoFleet</div><div class="card-tag">Multi-tenant Car Rental SaaS</div></div>
+          <span class="badge b-live">Live</span>
+        </div>
+        <div class="card-desc">Sellable car-rental website platform for Moroccan agencies. One codebase powers many agencies — each gets a subdomain, a 10-language site, WhatsApp bookings, and a full admin dashboard.</div>
+        <div class="chips">
+          <span class="tchip">React 18</span><span class="tchip">TypeScript</span><span class="tchip">Supabase</span><span class="tchip">Vercel</span><span class="tchip">Tailwind</span>
+        </div>
+        <div class="card-meta">
+          <div class="row"><span class="k">Model</span><span class="v">One-time packages — 1,999 / 3,499 / 5,999 MAD</span></div>
+          <div class="row"><span class="k">URL</span><a class="link" href="https://autofleet.ma" target="_blank">autofleet.ma</a></div>
+          <div class="row"><span class="k">Path</span><span class="v mono">Codes/car-rental-buisiness</span></div>
+        </div>
+      </div>
+
+      <div class="card" data-f="live">
+        <div class="card-top">
+          <div><div class="card-name">Auralux</div><div class="card-tag">DAP Affiliate Storefront</div></div>
+          <span class="badge b-live">Live</span>
+        </div>
+        <div class="card-desc">Premium catalog of 253+ digital audio players with source-verified specs, live prices, bundle deals, a "Find my DAP" wizard, and affiliate buy links with click tracking.</div>
+        <div class="chips">
+          <span class="tchip">React</span><span class="tchip">TypeScript</span><span class="tchip">Vite</span><span class="tchip">CSV→JSON data</span>
+        </div>
+        <div class="card-meta">
+          <div class="row"><span class="k">Model</span><span class="v">Affiliate commissions + bundle deals</span></div>
+          <div class="row"><span class="k">URL</span><a class="link" href="https://auralux.shop" target="_blank">auralux.shop</a></div>
+          <div class="row"><span class="k">Path</span><span class="v mono">Codes/dap-database</span></div>
+        </div>
+      </div>
+
+      <div class="card" data-f="live">
+        <div class="card-top">
+          <div><div class="card-name">PhoneCompare</div><div class="card-tag">Phone Specs &amp; Comparison</div></div>
+          <span class="badge b-live">Live</span>
+        </div>
+        <div class="card-desc">Side-by-side phone comparison site — specs and verdicts, SEO-positioned for "compare phones" searches. Title tag reads "Compare Phones Side by Side — Specs &amp; Verdicts (2026)".</div>
+        <div class="chips">
+          <span class="tchip">Web</span><span class="tchip">SEO</span><span class="tchip">Comparison</span>
+        </div>
+        <div class="card-meta">
+          <div class="row"><span class="k">Model</span><span class="v">SEO traffic → affiliate / ads</span></div>
+          <div class="row"><span class="k">URL</span><a class="link" href="https://phonecompare.app" target="_blank">phonecompare.app</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-f="live">
+        <div class="card-top">
+          <div><div class="card-name">Charika Search Tool</div><div class="card-tag">Lead-gen Pipeline</div></div>
+          <span class="badge b-live">Live</span>
+        </div>
+        <div class="card-desc">Lead engine that feeds AutoFleet. Finds Moroccan businesses with no website from OpenStreetMap, Google Maps, and the Bulletin Officiel (OCR on scanned Arabic announcements), then preps WhatsApp outreach.</div>
+        <div class="chips">
+          <span class="tchip">Python</span><span class="tchip">Overpass/OSM</span><span class="tchip">Google Places</span><span class="tchip">Tesseract OCR</span>
+        </div>
+        <div class="card-meta">
+          <div class="row"><span class="k">Model</span><span class="v">Internal tool — feeds AutoFleet sales</span></div>
+          <div class="row"><span class="k">Path</span><span class="v mono">Codes/charika_search_tool</span></div>
+        </div>
+      </div>
+
+      <div class="card" data-f="live">
+        <div class="card-top">
+          <div><div class="card-name">Portfolio</div><div class="card-tag">Personal Brand · "The Work Talks"</div></div>
+          <span class="badge b-live">Live</span>
+        </div>
+        <div class="card-desc">Terminal-styled personal site — the front door for contracts. Ships a project timeline, live GitHub activity, and the "TCHACH" persona. Every metric computed from real build sessions.</div>
+        <div class="chips">
+          <span class="tchip">React</span><span class="tchip">TypeScript</span><span class="tchip">Vite</span>
+        </div>
+        <div class="card-meta">
+          <div class="row"><span class="k">Model</span><span class="v">Client / contract acquisition</span></div>
+          <div class="row"><span class="k">URL</span><a class="link" href="https://www.brahimjellite.online" target="_blank">brahimjellite.online</a></div>
+          <div class="row"><span class="k">Path</span><span class="v mono">Codes/Portfolio</span></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ BUILDING ============ -->
+  <section data-sec="build">
+    <div class="sec-head"><span class="sec-title">In Build</span><span class="sec-count">3</span><span class="sec-rule"></span></div>
+    <div class="grid">
+
+      <div class="card" data-f="build">
+        <div class="card-top">
+          <div><div class="card-name">Pickr</div><div class="card-tag">AI Product-Finder Quiz SaaS</div></div>
+          <span class="badge b-build">Building</span>
+        </div>
+        <div class="card-desc">Generalized "find your product" wizard — a niche CLI generates questions, products, and scoring rules via DeepSeek, then serves a recommendation quiz with a managed-ads layer and admin panel.</div>
+        <div class="chips">
+          <span class="tchip">React</span><span class="tchip">Supabase</span><span class="tchip">DeepSeek API</span><span class="tchip">Zod</span>
+        </div>
+        <div class="card-meta">
+          <div class="row"><span class="k">Model</span><span class="v">Affiliate / managed ads per niche</span></div>
+          <div class="row"><span class="k">Path</span><span class="v mono">Codes/Pickr</span></div>
+        </div>
+      </div>
+
+      <div class="card" data-f="build">
+        <div class="card-top">
+          <div><div class="card-name">Listing Lens</div><div class="card-tag">Etsy Per-Product Analytics</div></div>
+          <span class="badge b-build">Building</span>
+        </div>
+        <div class="card-desc">Chrome extension + tiny Node server that estimates sales &amp; revenue per Etsy listing (Etsy only shows store-level totals). Snapshots every listing browsed into a sortable dashboard.</div>
+        <div class="chips">
+          <span class="tchip">Chrome MV3</span><span class="tchip">Node 18+</span><span class="tchip">Zero-dependency</span>
+        </div>
+        <div class="card-meta">
+          <div class="row"><span class="k">Model</span><span class="v">Product research / data utility</span></div>
+          <div class="row"><span class="k">Path</span><span class="v mono">Codes/EtsyProductAnlysis</span></div>
+        </div>
+      </div>
+
+      <div class="card" data-f="build">
+        <div class="card-top">
+          <div><div class="card-name">G16 Landing Page</div><div class="card-tag">AI Product Page Generator</div></div>
+          <span class="badge b-build">Building</span>
+        </div>
+        <div class="card-desc">Premium landing page that adapts to any electronics product — DeepSeek pulls and fills product data automatically. Sample shipped for the ROG Zephyrus G16.</div>
+        <div class="chips">
+          <span class="tchip">HTML/CSS/JS</span><span class="tchip">DeepSeek API</span><span class="tchip">Node</span>
+        </div>
+        <div class="card-meta">
+          <div class="row"><span class="k">Model</span><span class="v">Affiliate / product landing pages</span></div>
+          <div class="row"><span class="k">Path</span><span class="v mono">Codes/g16-website</span></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ SIDE / PAUSED ============ -->
+  <section data-sec="side">
+    <div class="sec-head"><span class="sec-title">Side Quests &amp; Paused</span><span class="sec-count">2</span><span class="sec-rule"></span></div>
+    <div class="grid">
+
+      <div class="card" data-f="side">
+        <div class="card-top">
+          <div><div class="card-name">domainhunt</div><div class="card-tag">Expired-Domain Hunting</div></div>
+          <span class="badge b-side">Side</span>
+        </div>
+        <div class="card-desc">Scans the top-1M list + Majestic + DNS/RDAP to surface expired domains with real traffic, then prices them against Porkbun/OVH. Aimed at finding flip-worthy domains under a cap.</div>
+        <div class="chips">
+          <span class="tchip">Python</span><span class="tchip">DNS/RDAP</span><span class="tchip">Wayback</span><span class="tchip">Majestic</span>
+        </div>
+        <div class="card-meta">
+          <div class="row"><span class="k">Model</span><span class="v">Domain flipping / resale</span></div>
+          <div class="row"><span class="k">Path</span><span class="v mono">~/domainhunt</span></div>
+        </div>
+      </div>
+
+      <div class="card" data-f="side">
+        <div class="card-top">
+          <div><div class="card-name">AI Automation Services</div><div class="card-tag">B2B Document Processing</div></div>
+          <span class="badge b-paused">Paused</span>
+        </div>
+        <div class="card-desc">Contract offer selling document-processing automation to companies — flagship was a $25k automation reusing SubsGuard's OCR+LLM extraction engine. Sales material lives in the fastcash folder.</div>
+        <div class="chips">
+          <span class="tchip">OCR</span><span class="tchip">LLM extraction</span><span class="tchip">Upwork</span><span class="tchip">Wise/Payoneer</span>
+        </div>
+        <div class="card-meta">
+          <div class="row"><span class="k">Model</span><span class="v">High-ticket contracts (pivoted to YouTube)</span></div>
+          <div class="row"><span class="k">Path</span><span class="v mono">Hermes projects/fastcash</span></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ ARCHIVED ============ -->
+  <section data-sec="archive">
+    <div class="sec-head"><span class="sec-title">Archived</span><span class="sec-count">2</span><span class="sec-rule"></span></div>
+    <div class="grid">
+
+      <div class="card" data-f="archive">
+        <div class="card-top">
+          <div><div class="card-name">SubsGuard</div><div class="card-tag">Subscription Tracker App</div></div>
+          <span class="badge b-archive">Archived</span>
+        </div>
+        <div class="card-desc">Subscription management app. Archived Aug 2026 — but its OCR+LLM extraction engine was reused as the core of the automation-services offer.</div>
+        <div class="chips"><span class="tchip">Expo</span><span class="tchip">React Native</span><span class="tchip">OCR</span></div>
+        <div class="card-meta">
+          <div class="row"><span class="k">Path</span><span class="v mono">projects/subsguard · GitHub private</span></div>
+        </div>
+      </div>
+
+      <div class="card" data-f="archive">
+        <div class="card-top">
+          <div><div class="card-name">OfflineVault</div><div class="card-tag">Offline Audio Library Builder</div></div>
+          <span class="badge b-archive">Archived</span>
+        </div>
+        <div class="card-desc">Build a personal offline audio library (artist / audiobook / Quran reciter / podcast) → organized MP3s for iPod-style devices. Was pivoted toward a legal, permission-based model before being dropped.</div>
+        <div class="chips"><span class="tchip">React</span><span class="tchip">FastAPI</span><span class="tchip">Docker</span></div>
+        <div class="card-meta">
+          <div class="row"><span class="k">Path</span><span class="v mono">Codes/offline-downloader</span></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ INFRA ============ -->
+  <footer>
+    <div class="cols">
+      <div>
+        <h4>Infrastructure</h4>
+        <div><span class="k">VPS</span> · <span class="v">8GB Ubuntu — n8n + cloud Hermes (Content Ops Center)</span></div>
+        <div><span class="k">Local</span> · <span class="v">Windows Hermes — hermes-setup (3-business pack · 6 cron jobs)</span></div>
+        <div><span class="k">GitHub</span> · <span class="v">brahimje (SubsGuard private)</span></div>
+        <div><span class="k">Notion</span> · <span class="v">"Start Again" dashboard (Tasks + Calendar + SubsGuard)</span></div>
+      </div>
+      <div>
+        <h4>YouTube Assets</h4>
+        <div><span class="k">Accounts</span> · <span class="v">10 Gmail accounts (2FA keys) — Desktop/Accounts</span></div>
+        <div><span class="k">Channels</span> · <span class="v">10 history/wisdom channels — 1 per account</span></div>
+        <div><span class="k">Media</span> · <span class="v">Mp4 Downloads: AudioBook · Music · Podcasts · Quran · قصص</span></div>
+      </div>
+      <div>
+        <h4>Live Domains</h4>
+        <div><span class="k">AutoFleet</span> · <span class="v">autofleet.ma</span></div>
+        <div><span class="k">Auralux</span> · <span class="v">auralux.shop</span></div>
+        <div><span class="k">PhoneCompare</span> · <span class="v">phonecompare.app</span></div>
+        <div><span class="k">Portfolio</span> · <span class="v">brahimjellite.online</span></div>
+      </div>
+    </div>
+    <div class="sig">tchach://dashboard — synced 2026-10-06 · local + cloud · ri7t lfouss · work talks.</div>
+  </footer>
+
+</div>
+
+<script>
+  /* ---------- falling Moroccan dirham banknotes ---------- */
+  (function(){
+    const NOTES = [
+      { c1:'#cf9ee8', c2:'#6b2f8f', num:'20',  ar:'عشرون درهماً',     fr:'VINGT DIRHAMS' },
+      { c1:'#63d492', c2:'#1a6b3c', num:'50',  ar:'خمسون درهماً',     fr:'CINQUANTE DIRHAMS' },
+      { c1:'#d4a766', c2:'#7a4a1d', num:'100', ar:'مائة درهم',        fr:'CENT DIRHAMS' },
+      { c1:'#63a8e0', c2:'#1d4a7a', num:'200', ar:'مائتا درهم',       fr:'DEUX CENTS DIRHAMS' },
+    ];
+    function serial(){ return 'BH ' + Math.floor(1e7 + Math.random()*9e7); }
+    function noteSVG(o){
+      const uid = 'g'+Math.random().toString(36).slice(2,8);
+      return '<svg viewBox="0 0 300 130" width="210" xmlns="http://www.w3.org/2000/svg">' +
+        '<defs>' +
+        '<linearGradient id="'+uid+'" x1="0" y1="0" x2="1" y2="0.7">' +
+        '<stop offset="0" stop-color="'+o.c1+'"/><stop offset="1" stop-color="'+o.c2+'"/>' +
+        '</linearGradient>' +
+        '<radialGradient id="'+uid+'w" cx="0.5" cy="0.5" r="0.5">' +
+        '<stop offset="0" stop-color="rgba(255,255,255,0.30)"/><stop offset="1" stop-color="rgba(255,255,255,0)"/>' +
+        '</radialGradient>' +
+        '</defs>' +
+        '<rect width="300" height="130" rx="7" fill="url(#'+uid+')"/>' +
+        '<circle cx="150" cy="65" r="42" fill="url(#'+uid+'w)"/>' +
+        '<g transform="translate(82,65)" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="0.8">' +
+        '<circle r="36"/><circle r="30"/><circle r="24"/><circle r="18"/><circle r="12"/><circle r="7"/>' +
+        '</g>' +
+        '<g transform="translate(82,65)">' +
+        '<rect x="-19" y="-19" width="38" height="38" fill="rgba(255,245,210,0.55)"/>' +
+        '<rect x="-19" y="-19" width="38" height="38" fill="rgba(255,245,210,0.55)" transform="rotate(45)"/>' +
+        '<circle r="6" fill="'+o.c2+'"/>' +
+        '</g>' +
+        '<g transform="translate(228,63)">' +
+        '<path d="M -24 36 L -24 -4 Q -24 -30 0 -30 Q 24 -30 24 -4 L 24 36 Z" fill="rgba(255,255,255,0.16)" stroke="rgba(255,245,210,0.5)" stroke-width="1.1"/>' +
+        '</g>' +
+        '<rect x="4" y="4" width="292" height="122" rx="5" fill="none" stroke="rgba(255,245,210,0.5)" stroke-width="1.3"/>' +
+        '<rect x="8" y="8" width="284" height="114" rx="4" fill="none" stroke="rgba(255,245,210,0.16)" stroke-width="0.8"/>' +
+        '<g fill="rgba(255,245,210,0.5)">' +
+        '<rect x="10" y="10" width="5" height="5" transform="rotate(45 12.5 12.5)"/>' +
+        '<rect x="285" y="10" width="5" height="5" transform="rotate(45 287.5 12.5)"/>' +
+        '<rect x="10" y="115" width="5" height="5" transform="rotate(45 12.5 117.5)"/>' +
+        '<rect x="285" y="115" width="5" height="5" transform="rotate(45 287.5 117.5)"/>' +
+        '</g>' +
+        '<text x="152" y="54" font-family="Georgia,serif" font-size="52" font-weight="700" fill="rgba(255,248,220,0.92)" text-anchor="middle">'+o.num+'</text>' +
+        '<text x="152" y="70" font-family="\'Segoe UI\',Arial,sans-serif" font-size="13" fill="rgba(255,248,220,0.8)" text-anchor="middle">'+o.ar+'</text>' +
+        '<text x="16" y="120" font-family="Arial,sans-serif" font-size="8" letter-spacing="1.5" fill="rgba(255,245,210,0.7)">المغرب · '+o.fr+'</text>' +
+        '<text x="286" y="120" font-family="\'Courier New\',monospace" font-size="9" fill="rgba(255,245,210,0.75)" text-anchor="end">'+serial()+'</text>' +
+        '</svg>';
+    }
+    const container = document.getElementById('notes');
+    const N = 14;
+    for(let i=0;i<N;i++){
+      const o = NOTES[i % NOTES.length];
+      const n = document.createElement('div');
+      n.className = 'note';
+      n.innerHTML = noteSVG(o);
+      n.style.left = (Math.random()*100) + '%';
+      n.style.setProperty('--rot', (Math.random()*16 - 8) + 'deg');
+      n.style.setProperty('--tilt', (Math.random()*24 - 12) + 'deg');
+      n.style.setProperty('--sway', (Math.random()*60 - 30) + 'px');
+      n.style.setProperty('--op', (0.14 + Math.random()*0.16).toFixed(2));
+      n.style.animationDuration = (15 + Math.random()*20) + 's';
+      n.style.animationDelay = (-Math.random()*30) + 's';
+      container.appendChild(n);
+    }
+  })();
+
+  /* ---------- money counter ---------- */
+  const TARGET = 1250000; // <-- بدّل هاد الرقم بالفلوس الحقيقية ديالك
+  (function(){
+    const el = document.getElementById('counter');
+    const dur = 4200;
+    const start = performance.now();
+    function fmt(v){ return v.toLocaleString('fr-FR'); }
+    function tick(t){
+      const p = Math.min(1, (t - start) / dur);
+      const eased = 1 - Math.pow(1 - p, 4);
+      el.textContent = fmt(Math.floor(TARGET * eased));
+      if(p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  })();
+
+  /* ---------- stat count-up ---------- */
+  (function(){
+    const els = document.querySelectorAll('.stat .n');
+    els.forEach(el => {
+      const target = parseInt(el.dataset.count, 10);
+      const dur = 1800;
+      const start = performance.now();
+      function tick(t){
+        const p = Math.min(1, (t - start) / dur);
+        const eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(target * eased);
+        if(p < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    });
+  })();
+
+  /* ---------- filter ---------- */
+  const chips = document.querySelectorAll('.chip');
+  const cards = document.querySelectorAll('.card, .focus');
+  const sections = document.querySelectorAll('section[data-sec]');
+  chips.forEach(c => c.addEventListener('click', () => {
+    chips.forEach(x => x.classList.remove('on'));
+    c.classList.add('on');
+    const f = c.dataset.f;
+    cards.forEach(card => { card.hidden = !(f === 'all' || card.dataset.f === f); });
+    sections.forEach(sec => {
+      const hasVisible = [...sec.querySelectorAll('.card, .focus')].some(card => !card.hidden);
+      sec.style.display = hasVisible ? '' : 'none';
+    });
+  }));
+</script>
+</body>
+</html>
